@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Search Comparison</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            padding: 20px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 10px;
+        }
+        table {
+            margin: auto;
+            border-collapse: collapse;
+            width: 95%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #bestAlgo {
+            margin-top: 20px;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Searching Algorithms Comparison</h2>
+
+<input type="text" id="arrayInput" placeholder="Enter numbers (e.g. 5,3,8,1)">
+<br>
+<input type="number" id="target" placeholder="Enter element to search">
+<br>
+<button onclick="compareSearch()">Compare</button>
+
+<table>
+<tr>
+<th>Algorithm</th>
+<th>Best</th>
+<th>Average</th>
+<th>Worst</th>
+<th>Time (ms)</th>
+<th>Result</th>
+</tr>
+
+<tr>
+<td>Linear</td>
+<td>O(1)</td>
+<td>O(n)</td>
+<td>O(n)</td>
+<td id="linearTime"></td>
+<td id="linearResult"></td>
+</tr>
+
+<tr>
+<td>Binary</td>
+<td>O(1)</td>
+<td>O(log n)</td>
+<td>O(log n)</td>
+<td id="binaryTime"></td>
+<td id="binaryResult"></td>
+</tr>
+
+<tr>
+<td>Jump</td>
+<td>O(1)</td>
+<td>O(√n)</td>
+<td>O(√n)</td>
+<td id="jumpTime"></td>
+<td id="jumpResult"></td>
+</tr>
+
+<tr>
+<td>Interpolation</td>
+<td>O(1)</td>
+<td>O(log log n)</td>
+<td>O(n)</td>
+<td id="interpTime"></td>
+<td id="interpResult"></td>
+</tr>
+
+<tr>
+<td>Exponential</td>
+<td>O(1)</td>
+<td>O(log n)</td>
+<td>O(log n)</td>3
+<td id="expoTime"></td>
+<td id="expoResult"></td>
+</tr>
+
+<tr>
+<td>Fibonacci</td>
+<td>O(1)</td>
+<td>O(log n)</td>
+<td>O(log n)</td>
+<td id="fibTime"></td>
+<td id="fibResult"></td>
+</tr>
+
+</table>
+
+<h3 id="bestAlgo"></h3>
+
+<script>
+
+// Linear
+function linearSearch(arr, target) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i] == target) return i;
+    }
+    return -1;
+}
+
+// Binary
+function binarySearch(arr, target) {
+    let l = 0, r = arr.length - 1;
+    while (l <= r) {
+        let mid = Math.floor((l + r) / 2);
+        if (arr[mid] == target) return mid;
+        else if (arr[mid] < target) l = mid + 1;
+        else r = mid - 1;
+    }
+    return -1;
+}
+
+// Jump
+function jumpSearch(arr, target) {
+    let n = arr.length;
+    let step = Math.floor(Math.sqrt(n));
+    let prev = 0;
+
+    while (arr[Math.min(step, n) - 1] < target) {
+        prev = step;
+        step += Math.floor(Math.sqrt(n));
+        if (prev >= n) return -1;
+    }
+
+    for (let i = prev; i < Math.min(step, n); i++) {
+        if (arr[i] == target) return i;
+    }
+
+    return -1;
+}
+
+// Interpolation
+function interpolationSearch(arr, target) {
+    let low = 0, high = arr.length - 1;
+
+    while (low <= high && target >= arr[low] && target <= arr[high]) {
+        let pos = low + Math.floor(((target - arr[low]) * (high - low)) / (arr[high] - arr[low]));
+
+        if (arr[pos] == target) return pos;
+        if (arr[pos] < target) low = pos + 1;
+        else high = pos - 1;
+    }
+    return -1;
+}
+
+// Exponential
+function exponentialSearch(arr, target) {
+    if (arr[0] == target) return 0;
+
+    let i = 1;
+    while (i < arr.length && arr[i] <= target) i *= 2;
+
+    let sub = arr.slice(i / 2, Math.min(i, arr.length));
+    let res = binarySearch(sub, target);
+    return res != -1 ? res + i / 2 : -1;
+}
+
+// Fibonacci
+function fibonacciSearch(arr, target) {
+    let n = arr.length;
+    let fibMMm2 = 0, fibMMm1 = 1;
+    let fibM = fibMMm2 + fibMMm1;
+
+    while (fibM < n) {
+        fibMMm2 = fibMMm1;
+        fibMMm1 = fibM;
+        fibM = fibMMm2 + fibMMm1;
+    }
+
+    let offset = -1;
+
+    while (fibM > 1) {
+        let i = Math.min(offset + fibMMm2, n - 1);
+
+        if (arr[i] < target) {
+            fibM = fibMMm1;
+            fibMMm1 = fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+            offset = i;
+        } else if (arr[i] > target) {
+            fibM = fibMMm2;
+            fibMMm1 = fibMMm1 - fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+        } else return i;
+    }
+
+    if (fibMMm1 && arr[offset + 1] == target) return offset + 1;
+
+    return -1;
+}
+
+// Measure
+function measureTime(func, arr, target) {
+    let start = performance.now();
+    let result = func(arr, target);
+    let end = performance.now();
+    return { time: (end - start).toFixed(4), result: result };
+}
+
+// Compare
+function compareSearch() {
+    let input = document.getElementById("arrayInput").value;
+    let target = parseInt(document.getElementById("target").value);
+
+    let arr = input.split(',').map(Number);
+    let sorted = [...arr].sort((a, b) => a - b);
+
+    let linear = measureTime(linearSearch, arr, target);
+    let binary = measureTime(binarySearch, sorted, target);
+    let jump = measureTime(jumpSearch, sorted, target);
+    let interp = measureTime(interpolationSearch, sorted, target);
+    let expo = measureTime(exponentialSearch, sorted, target);
+    let fib = measureTime(fibonacciSearch, sorted, target);
+
+    document.getElementById("linearTime").innerText = linear.time;
+    document.getElementById("binaryTime").innerText = binary.time;
+    document.getElementById("jumpTime").innerText = jump.time;
+    document.getElementById("interpTime").innerText = interp.time;
+    document.getElementById("expoTime").innerText = expo.time;
+    document.getElementById("fibTime").innerText = fib.time;
+
+    document.getElementById("linearResult").innerText = linear.result != -1 ? "Found" : "Not Found";
+    document.getElementById("binaryResult").innerText = binary.result != -1 ? "Found" : "Not Found";
+    document.getElementById("jumpResult").innerText = jump.result != -1 ? "Found" : "Not Found";
+    document.getElementById("interpResult").innerText = interp.result != -1 ? "Found" : "Not Found";
+    document.getElementById("expoResult").innerText = expo.result != -1 ? "Found" : "Not Found";
+    document.getElementById("fibResult").innerText = fib.result != -1 ? "Found" : "Not Found";
+
+    let times = [
+        { name: "Linear", time: parseFloat(linear.time) },
+        { name: "Binary", time: parseFloat(binary.time) },
+        { name: "Jump", time: parseFloat(jump.time) },
+        { name: "Interpolation", time: parseFloat(interp.time) },
+        { name: "Exponential", time: parseFloat(expo.time) },
+        { name: "Fibonacci", time: parseFloat(fib.time) }
+    ];
+
+    times.sort((a, b) => a.time - b.time);
+
+    document.getElementById("bestAlgo").innerText =
+        "Best Searching Method: " + times[0].name + " (" + times[0].time + " ms)";
+}
+
+</script>
+
+</body>
+</html>
